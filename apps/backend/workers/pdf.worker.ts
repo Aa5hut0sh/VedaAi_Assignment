@@ -111,7 +111,17 @@ export const pdfWorker = new Worker(
       const pdfPath = path.join(pdfDir, `${assignmentId}.pdf`);
 
 
-      const browser = await puppeteer.launch({ headless: true });
+      const browser = await puppeteer.launch({ 
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          
+          "--disable-dev-shm-usage",
+          "--single-process",
+          "--no-zygote"
+        ],
+       });
       const page = await browser.newPage();
       await page.setContent(htmlContent);
       await page.pdf({ 

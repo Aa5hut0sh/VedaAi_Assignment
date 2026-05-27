@@ -163,7 +163,7 @@ export default function CreateAssignmentPage() {
         title: "Assignment created",
         message: "Your assignment was sent for AI generation.",
       });
-      router.push("/assignments");
+      router.push("/dashboard/assignments");
     } catch (error: unknown) {
       const message = axios.isAxiosError(error)
         ? error.response?.data?.message
