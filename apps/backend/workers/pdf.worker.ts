@@ -5,6 +5,7 @@ import { getIo } from "../sockets/socket";
 import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
+import cloudinary from "../config/cloudinary.config.ts";
 
 export const pdfWorker = new Worker(
   "pdf-generation",
@@ -129,21 +130,42 @@ export const pdfWorker = new Worker(
         format: "A4", 
         margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" } 
       });
+
+      const localTempPath = path.join(__dirname, `../uploads/temp-${assignmentId}.pdf`);
+      await page.pdf({ path: localTempPath, format: "A4", printBackground: true });
       await browser.close();
 
-      const publicPdfUrl = `/uploads/pdfs/${assignmentId}.pdf`;
-      await Assignment.findByIdAndUpdate(assignmentId, { 
-        pdfStatus: "COMPLETED", 
-        pdfUrl: publicPdfUrl 
-      });
+      try {
+        const uploadResult = await cloudinary.uploader.upload(localTempPath, {
+          folder: "veda-ai/assignments",
+          resource_type: "raw", 
+        });
 
-      io.to(assignmentId).emit("pdf-status-update", { 
-        assignmentId, 
-        pdfStatus: "COMPLETED", 
-        pdfUrl: publicPdfUrl 
-      });
+        await Assignment.findByIdAndUpdate(assignmentId, { 
+          pdfStatus: "COMPLETED", 
+          pdfUrl: uploadResult.secure_url,
+        });
 
-      console.log(`[Worker] PDF successfully created at ${pdfPath}`);
+        io.to(assignmentId).emit("pdf-status-update", { 
+          assignmentId, 
+          pdfStatus: "COMPLETED", 
+          pdfUrl: uploadResult.secure_url,
+        });
+
+        console.log(`[Worker] PDF successfully created at ${pdfPath}`);
+      } catch (error: any) {
+        console.error(`[Worker] PDF generation failed:`, error.message);
+        
+        await Assignment.findByIdAndUpdate(assignmentId, { pdfStatus: "FAILED" });
+        io.to(assignmentId).emit("pdf-status-update", { assignmentId, pdfStatus: "FAILED" });
+        
+        throw error;
+      } finally {
+        // Clean up temp file if it exists
+        if (fs.existsSync(localTempPath)) {
+          fs.unlinkSync(localTempPath);
+        }
+      }
     } catch (error: any) {
       console.error(`[Worker] PDF generation failed:`, error.message);
       
