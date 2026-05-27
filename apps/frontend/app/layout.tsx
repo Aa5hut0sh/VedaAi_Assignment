@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "react-hot-toast"; // Add this
+import { Toaster } from "react-hot-toast";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "VedaAI - Teacher Portal",
@@ -17,8 +17,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <Toaster position="top-center" /> {/* Add this line */}
+      <body className={plusJakartaSans.className}>
+        <Toaster position="top-center" />
         {children}
       </body>
     </html>

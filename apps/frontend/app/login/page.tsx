@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
+import axios from "axios";
 import { Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { authService } from "@/services/auth.service";
@@ -11,7 +13,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth); // Using our Zustand store
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,12 +28,14 @@ export default function LoginPage() {
 
       // Save to global state and localStorage
       setAuth(response.user, response.token);
-      
+
       toast.success("Welcome back!");
-      router.push("/dashboard"); 
-      
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Invalid email or password");
+      router.push("/dashboard");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : null;
+      toast.error(message || "Invalid email or password");
     } finally {
       setIsLoading(false);
     }
@@ -40,20 +44,26 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f4f4f5] px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-sm border border-gray-100">
-        
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-              V
-            </div>
+            <Image
+                    src="/images/logo.png"
+                    alt="VedaAI logo"
+                    width={48}
+                    height={48}
+                    priority
+                  />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
             Welcome to VedaAI
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Don't have an account?{" "}
-            <Link href="/register" className="font-bold text-orange-600 hover:text-orange-500 transition-colors">
+            Do not have an account?{" "}
+            <Link
+              href="/register"
+              className="font-bold text-orange-600 hover:text-orange-500 transition-colors"
+            >
               Create one now
             </Link>
           </p>
@@ -61,9 +71,10 @@ export default function LoginPage() {
 
         {/* Form */}
         <form className="mt-8 space-y-5" onSubmit={handleLogin}>
-          
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">Email address</label>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Email address
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
@@ -80,7 +91,9 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">Password</label>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Password
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />

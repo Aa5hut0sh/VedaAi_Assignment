@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f3f3f4;
   --foreground: #171717;
 }
 
@@ -12,15 +12,37 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(255, 162, 94, 0.12),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.8),
+      transparent 24%
+    ),
+    linear-gradient(180deg, #f7f7f8 0%, #ededee 100%);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: inherit;
+  min-height: 100vh;
+}
+
+body::-webkit-scrollbar {
+  width: 10px;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 9999px;
 }

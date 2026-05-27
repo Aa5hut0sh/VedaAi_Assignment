@@ -3,15 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import { Mail, Lock, User, Building, Loader2, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/useAuthStore";
+import Image from "next/image";
 
 export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
-  
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [school, setSchool] = useState("");
@@ -21,7 +23,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       return toast.error("Passwords do not match");
     }
@@ -43,12 +45,14 @@ export default function RegisterPage() {
 
       // 2. Log them in instantly
       setAuth(response.user, response.token);
-      
+
       toast.success("Account created successfully!");
       router.push("/dashboard");
-      
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Registration failed");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : null;
+      toast.error(message || "Registration failed");
     } finally {
       setIsLoading(false);
     }
@@ -57,69 +61,124 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f4f4f5] px-4 py-12">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-sm border border-gray-100">
-        
+        <div className="flex justify-center mb-4">
+          <Image
+            src="/images/logo.png"
+            alt="VedaAI logo"
+            width={48}
+            height={48}
+            priority
+          />
+        </div>
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
             Create an Account
           </h2>
           <p className="mt-2 text-sm text-gray-500">
             Already have an account?{" "}
-            <Link href="/login" className="font-bold text-orange-600 hover:text-orange-500 transition-colors">
+            <Link
+              href="/login"
+              className="font-bold text-orange-600 hover:text-orange-500 transition-colors"
+            >
               Sign in here
             </Link>
           </p>
         </div>
 
         <form className="mt-8 space-y-4" onSubmit={handleRegister}>
-          
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-1.5">Full Name</label>
+            <label className="block text-sm font-bold text-gray-900 mb-1.5">
+              Full Name
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <User className="h-5 w-5 text-gray-400" />
               </div>
-              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200" placeholder="John Doe" />
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                placeholder="John Doe"
+              />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-1.5">School Name</label>
+            <label className="block text-sm font-bold text-gray-900 mb-1.5">
+              School Name
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Building className="h-5 w-5 text-gray-400" />
               </div>
-              <input type="text" required value={school} onChange={(e) => setSchool(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200" placeholder="Delhi Public School" />
+              <input
+                type="text"
+                required
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                placeholder="Delhi Public School"
+              />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-1.5">Email address</label>
+            <label className="block text-sm font-bold text-gray-900 mb-1.5">
+              Email address
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
               </div>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200" placeholder="teacher@school.edu" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                placeholder="teacher@school.edu"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-1.5">Password</label>
+              <label className="block text-sm font-bold text-gray-900 mb-1.5">
+                Password
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-4 w-4 text-gray-400" />
                 </div>
-                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200" placeholder="••••••••" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                  placeholder="••••••••"
+                />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-1.5">Confirm</label>
+              <label className="block text-sm font-bold text-gray-900 mb-1.5">
+                Confirm
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-4 w-4 text-gray-400" />
                 </div>
-                <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200" placeholder="••••••••" />
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                  placeholder="••••••••"
+                />
               </div>
             </div>
           </div>

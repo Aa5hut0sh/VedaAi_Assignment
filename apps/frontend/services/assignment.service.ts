@@ -11,6 +11,15 @@ export interface Assignment {
   pdfUrl?: string;
   createdAt: string;
   dueDate: string;
+  questionConfig?: Array<{
+    questionType: string;
+    count: number;
+    marks: number;
+  }>;
+  generatedPaper?: {
+    totalMarks?: number;
+    totalQuestions?: number;
+  };
 }
 
 export const assignmentService = {
@@ -25,7 +34,10 @@ export const assignmentService = {
   },
 
   // 2. Get all assignments for the logged-in teacher
-  getAll: async (): Promise<{ success: boolean; assignments: Assignment[] }> => {
+  getAll: async (): Promise<{
+    success: boolean;
+    assignments: Assignment[];
+  }> => {
     const response = await api.get("/assignments/all");
     return response.data;
   },

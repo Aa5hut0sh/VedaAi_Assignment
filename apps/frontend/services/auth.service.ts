@@ -1,5 +1,9 @@
 import api from "../lib/api";
-import type { AuthResponse, LoginPayload, RegisterPayload } from "../types/auth.types";
+import type {
+  AuthResponse,
+  LoginPayload,
+  RegisterPayload,
+} from "../types/auth.types";
 
 export const authService = {
   login: async (data: LoginPayload): Promise<AuthResponse> => {
@@ -9,6 +13,17 @@ export const authService = {
 
   register: async (data: RegisterPayload): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>("/auth/register", data);
+    return response.data;
+  },
+
+  me: async (): Promise<{
+    success: boolean;
+    user: import("../types/auth.types").User;
+  }> => {
+    const response = await api.get<{
+      success: boolean;
+      user: import("../types/auth.types").User;
+    }>("/auth/me");
     return response.data;
   },
 

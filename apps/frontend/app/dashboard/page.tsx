@@ -2,170 +2,207 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
-import { useAuthStore } from "@/store/useAuthStore";
-import { 
-  FileText, Clock, CheckCircle, AlertCircle, 
-  Loader2, Download, Plus, BookOpen
+import {
+  FileText,
+  Loader2,
+  Sparkles,
+  ArrowRight,
+  Users,
+  CheckCircle,
 } from "lucide-react";
-
-// Matches your backend schema
-interface Assignment {
-  _id: string;
-  title: string;
-  subject: string;
-  className: string;
-  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-  pdfStatus: "NONE" | "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-  pdfUrl?: string;
-  createdAt: string;
-}
+import toast from "react-hot-toast";
+import { assignmentService, Assignment } from "@/services/assignment.service";
+import { useAuthStore } from "@/store/useAuthStore";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 export default function DashboardPage() {
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch assignments on load
   useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        const res = await axios.get("http://localhost:3001/api/assignments/all", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setAssignments(res.data.assignments);
-      } catch (error) {
-        console.error("Failed to fetch assignments", error);
-      } finally {
+    void assignmentService
+      .getAll()
+      .then((response) => {
+        setAssignments(response.assignments);
+      })
+      .catch(() => {
+        toast.error("Failed to load dashboard stats");
+      })
+      .finally(() => {
         setIsLoading(false);
-      }
-    };
+      });
+  }, []);
 
-    if (token) fetchAssignments();
-  }, [token]);
+  const totalAssignments = assignments.length;
+  const completedAssignments = assignments.filter(
+    (item) => item.status === "COMPLETED",
+  ).length;
+  const generatingAssignments = assignments.filter(
+    (item) => item.status === "PROCESSING",
+  ).length;
+  const totalQuestions = assignments.reduce((sum, item) => {
+    const questionConfigTotal =
+      item.questionConfig?.reduce(
+        (questionSum, config) => questionSum + (config.count || 0),
+        0,
+      ) || 0;
 
-  // Helper to render the correct status badge
-  const renderStatusBadge = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return (
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-            <CheckCircle className="w-3.5 h-3.5" /> Ready
-          </span>
-        );
-      case "PROCESSING":
-        return (
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating AI...
-          </span>
-        );
-      case "FAILED":
-        return (
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-            <AlertCircle className="w-3.5 h-3.5" /> Failed
-          </span>
-        );
-      default:
-        return (
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
-            <Clock className="w-3.5 h-3.5" /> Queued
-          </span>
-        );
-    }
-  };
+    return sum + (item.generatedPaper?.totalQuestions || questionConfigTotal);
+  }, 0);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  const recentAssignments = assignments.slice(0, 3);
 
   return (
     <div className="space-y-6">
-      {/* Header Row */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Your Assignments</h2>
-          <p className="text-gray-500 text-sm mt-1">Manage and view your generated question papers.</p>
-        </div>
-        <Link 
-          href="/dashboard/create" 
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
-        >
-          <Plus className="w-5 h-5" />
-          New Assignment
-        </Link>
-      </div>
-
-      {/* Empty State */}
-      {assignments.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center flex flex-col items-center shadow-sm">
-          <div className="bg-blue-50 p-4 rounded-full mb-4">
-            <FileText className="w-8 h-8 text-blue-600" />
+      <section className="rounded-4xl border border-white/70 bg-white/85 p-6 md:p-8 shadow-[0_18px_60px_-34px_rgba(0,0,0,0.42)] backdrop-blur-xl">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <UserAvatar
+              name={user?.name}
+              seed={user?.id || user?.email}
+              size={64}
+            />
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-orange-700">
+                <Sparkles className="h-3.5 w-3.5" />
+                Teacher Dashboard
+              </div>
+              <h1 className="mt-3 text-3xl font-semibold text-gray-900">
+                {user?.name || "Teacher"}
+              </h1>
+              <p className="mt-1 text-sm text-gray-500">
+                {user?.school || "Your School"} • {user?.role || "TEACHER"}
+              </p>
+            </div>
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-1">No assignments yet</h3>
-          <p className="text-gray-500 mb-6 max-w-sm">
-            You haven't generated any question papers. Upload a syllabus or topic list to get started.
-          </p>
-          <Link href="/dashboard/create" className="text-blue-600 font-medium hover:underline">
-            Create your first assignment &rarr;
+
+          <Link
+            href="/dashboard/create"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1c1c1e] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_-14px_rgba(0,0,0,0.55)] transition-colors hover:bg-black"
+          >
+            Create Assignment
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-      ) : (
-        /* Grid of Assignment Cards */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {assignments.map((assignment) => (
-            <div 
-              key={assignment._id} 
-              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group flex flex-col"
-            >
-              <div className="p-5 flex-1">
-                <div className="flex justify-between items-start mb-4">
-                  {renderStatusBadge(assignment.status)}
-                  <span className="text-xs text-gray-400 font-medium">
-                    {new Date(assignment.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
-                  {assignment.title}
-                </h3>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <BookOpen className="w-4 h-4 mr-2.5 text-gray-400" />
-                    {assignment.subject}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Clock className="w-4 h-4 mr-2.5 text-gray-400" />
-                    Class {assignment.className}
-                  </div>
-                </div>
-              </div>
+      </section>
 
-              {/* Card Footer Actions */}
-              <div className="border-t border-gray-100 p-4 bg-gray-50 flex gap-3">
-                <Link 
-                  href={`/dashboard/assignment/${assignment._id}`}
-                  className="flex-1 bg-white border border-gray-200 text-gray-700 text-center py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-                >
-                  View Details
-                </Link>
-                
-                <button 
-                  disabled={assignment.status !== "COMPLETED"}
-                  className="flex items-center justify-center gap-2 flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Download className="w-4 h-4" />
-                  PDF
-                </button>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Assignments", value: totalAssignments, icon: FileText },
+          {
+            label: "Completed",
+            value: completedAssignments,
+            icon: CheckCircle,
+          },
+          { label: "Generating", value: generatingAssignments, icon: Loader2 },
+          { label: "Questions", value: totalQuestions, icon: Users },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-[28px] border border-white/70 bg-white/85 p-5 shadow-[0_16px_48px_-32px_rgba(0,0,0,0.35)]"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  {stat.label}
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-gray-900">
+                  {isLoading ? "--" : stat.value}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-50 text-gray-700">
+                <stat.icon
+                  className={`h-5 w-5 ${stat.label === "Generating" && !isLoading ? "animate-spin text-orange-500" : ""}`}
+                />
               </div>
             </div>
-          ))}
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_16px_52px_-34px_rgba(0,0,0,0.38)]">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Recent Assignments
+              </h2>
+              <p className="text-sm text-gray-500">
+                Latest generated or processing papers
+              </p>
+            </div>
+            <Link
+              href="/dashboard/assignments"
+              className="text-sm font-semibold text-gray-900 hover:text-orange-600"
+            >
+              View all
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {recentAssignments.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-500">
+                No assignments yet. Create your first one to get started.
+              </div>
+            ) : (
+              recentAssignments.map((assignment) => (
+                <div
+                  key={assignment._id}
+                  className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/70 px-4 py-4"
+                >
+                  <div>
+                    <p className="text-base font-semibold text-gray-900">
+                      {assignment.title}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {assignment.subject} • Class {assignment.className}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/dashboard/assignments/${assignment._id}`}
+                    className="text-sm font-semibold text-orange-600 hover:text-orange-700"
+                  >
+                    Open
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
         </div>
-      )}
+
+        <div className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_16px_52px_-34px_rgba(0,0,0,0.38)]">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Teacher Snapshot
+          </h2>
+          <div className="mt-5 space-y-4">
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                School
+              </p>
+              <p className="mt-2 text-sm font-semibold text-gray-900">
+                {user?.school || "Your School"}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Email
+              </p>
+              <p className="mt-2 text-sm font-semibold text-gray-900">
+                {user?.email || "teacher@school.edu"}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Role
+              </p>
+              <p className="mt-2 text-sm font-semibold text-gray-900">
+                {user?.role || "TEACHER"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
