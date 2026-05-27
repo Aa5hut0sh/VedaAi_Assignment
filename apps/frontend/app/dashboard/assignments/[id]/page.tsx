@@ -244,7 +244,7 @@ export default function ViewAssignmentPage() {
           message: "Your PDF is ready to download.",
         });
         // Automatically open the PDF in a new tab for the user
-        window.open(`http://localhost:3001${data.pdfUrl}`, "_blank");
+        window.open(data.pdfUrl, "_blank");
       } else if (data.pdfStatus === "FAILED") {
         setIsDownloading(false);
         toast.error("PDF generation failed.");
@@ -286,7 +286,7 @@ export default function ViewAssignmentPage() {
             ? { ...prev, pdfStatus: "COMPLETED", pdfUrl: response.pdfUrl }
             : prev,
         );
-        window.open(`http://localhost:3001${response.pdfUrl}`, "_blank");
+        window.open(response.pdfUrl, "_blank");
         toast.success("Downloading PDF...");
         addNotification({
           type: "success",
