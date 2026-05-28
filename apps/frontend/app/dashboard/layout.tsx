@@ -35,7 +35,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-transparent">
       <AuthBootstrap />
       {/* Fixed Left Sidebar */}
-      <DesktopSidebar assignmentCount={assignmentCount} />
+      <DesktopSidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative w-full h-full overflow-hidden px-2 md:px-3 py-2 md:py-3">

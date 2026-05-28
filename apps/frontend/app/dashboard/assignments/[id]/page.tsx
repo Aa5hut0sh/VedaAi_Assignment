@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import { assignmentService } from "@/services/assignment.service";
 import { useSocket } from "@/hooks/useSocket";
 import { useNotificationStore } from "@/store/useNotificationStore";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 type QuestionItem = {
   difficulty?: string;
@@ -154,6 +155,8 @@ export default function ViewAssignmentPage() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   // modal state removed — using toast notifications
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const refreshAssignment = useCallback(() => {
     if (!assignmentId) return;
@@ -319,11 +322,7 @@ export default function ViewAssignmentPage() {
 
   // Handle AI Regeneration
   const handleRegenerate = async () => {
-    const confirm = window.confirm(
-      "This will erase the current paper and generate a new one. Continue?",
-    );
-    if (!confirm) return;
-
+    setConfirmOpen(false);
     setIsRegenerating(true);
     try {
       await assignmentService.regenerate(assignmentId);
@@ -377,6 +376,17 @@ export default function ViewAssignmentPage() {
     <div className="max-w-4xl mx-auto pb-12 space-y-6">
       {/* 1. Header Card (Metadata & Actions) */}
       <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-start justify-between gap-6">
+        <ConfirmDialog
+                open={confirmOpen}
+                title="Regenerate assignment"
+                message="Are you sure you want to regenerate this assignment?"
+                confirmLabel="Regenerate"
+                cancelLabel="Cancel"
+                onConfirm={handleRegenerate}
+                onCancel={() => {
+                  setConfirmOpen(false);
+                }}
+              />
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
@@ -416,7 +426,7 @@ export default function ViewAssignmentPage() {
           </button>
 
           <button
-            onClick={handleRegenerate}
+            onClick={() => setConfirmOpen(true)}
             disabled={isRegenerating || assignment.status === "PROCESSING"}
             className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm text-sm"
           >

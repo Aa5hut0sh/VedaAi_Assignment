@@ -10,7 +10,7 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { assignmentService, Assignment } from "@/services/assignment.service";
 import { useSocket } from "@/hooks/useSocket";
-
+import { useAssignmentStore } from "@/store/useAssignmentStore";
 type AssignmentStatus = Assignment["status"];
 
 export default function AssignmentsPage() {
@@ -19,6 +19,8 @@ export default function AssignmentsPage() {
   const addNotification = useNotificationStore(
     (state) => state.addNotification,
   );
+
+  const decrementCount = useAssignmentStore((state) => state.decrementCount);
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -127,6 +129,7 @@ export default function AssignmentsPage() {
 
     try {
       await assignmentService.delete(id);
+      decrementCount();
       toast.success("Assignment deleted");
       addNotification({
         type: "success",
