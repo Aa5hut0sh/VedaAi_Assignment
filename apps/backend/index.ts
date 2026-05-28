@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
 import connectDB from './config/db';
 import authRoutes from './routes/auth.routes';
 import assignmentRoutes from './routes/assignment.routes';
@@ -8,7 +9,6 @@ import "./workers/pdf.worker";
 import { createServer } from 'http';
 import cors from 'cors';
 import { initSockets } from './sockets/socket';
-dotenv.config();
 
 // Connect to MongoDB
 await connectDB().then(() => {

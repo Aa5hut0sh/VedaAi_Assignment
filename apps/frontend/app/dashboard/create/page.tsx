@@ -102,7 +102,6 @@ export default function CreateAssignmentPage() {
   };
 
   const toggleRecording = () => {
-    // If already recording, stop it
     if (isRecording) {
       recognitionRef.current?.stop();
       setIsRecording(false);
@@ -117,24 +116,31 @@ export default function CreateAssignmentPage() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true; // Keeps recording until the user clicks stop
-    recognition.interimResults = true; // Shows words in real-time as they speak
+    recognition.continuous = true; 
+    recognition.interimResults = true; 
     
-    // Save the text that was already in the box so we append to it, not overwrite it
-    const startText = additionalInfo ? additionalInfo + " " : "";
+    // 1. Capture the "Snapshot" of the text currently in the box
+    // We add a space if there's already text so the new words don't stick to the old ones
+    const baseText = additionalInfo.trim() ? additionalInfo.trim() + " " : "";
 
     recognition.onresult = (event: any) => {
-      let currentTranscript = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        currentTranscript += event.results[i][0].transcript;
+      let currentSessionTranscript = "";
+      
+      // 2. Loop through all results in the CURRENT session (starting from 0)
+      for (let i = 0; i < event.results.length; i++) {
+        currentSessionTranscript += event.results[i][0].transcript;
       }
-      setAdditionalInfo(startText + currentTranscript);
+      
+      // 3. Stack: Original Text from previous sessions + Current Session Speech
+      setAdditionalInfo(baseText + currentSessionTranscript);
     };
 
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error);
       setIsRecording(false);
-      toast.error("Microphone error. Please check your browser permissions.");
+      if (event.error === 'not-allowed') {
+        toast.error("Microphone access denied.");
+      }
     };
 
     recognition.onend = () => {
