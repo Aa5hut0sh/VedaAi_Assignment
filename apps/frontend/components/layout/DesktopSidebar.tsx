@@ -8,8 +8,8 @@ import { navItems } from "./navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useAssignmentStore } from "@/store/useAssignmentStore";
 import { assignmentService } from "@/services/assignment.service";
-import UserAvatar from "@/components/shared/UserAvatar";
 import AppLogo from "./AppLogo";
+import Image from "next/image";
 
 export default function DesktopSidebar() {
   const pathname = usePathname();
@@ -91,12 +91,13 @@ export default function DesktopSidebar() {
         </Link>
 
         <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-center gap-3">
-          <UserAvatar
-            name={user?.name}
-            seed={user?.id || user?.email}
-            size={40}
-            className="shrink-0"
-          />
+          <Image
+            src="/images/School.png"
+            alt="School Avatar"
+            width={40}
+            height={40}
+            className="rounded-full object-cover"
+            />
           <div className="overflow-hidden">
             <p className="text-sm font-bold text-gray-900 truncate">
               {user?.school || "Your School"}

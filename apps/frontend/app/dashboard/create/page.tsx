@@ -294,7 +294,7 @@ export default function CreateAssignmentPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl pb-10">
+    <div className="mx-auto max-w-4xl pb-28 md:pb-10">
 
       {step !== 3 && (
         <div className="mb-8 rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-[0_14px_50px_-30px_rgba(0,0,0,0.4)] backdrop-blur-xl animate-in fade-in">
