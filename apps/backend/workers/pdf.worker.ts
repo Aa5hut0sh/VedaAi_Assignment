@@ -5,7 +5,8 @@ import { getIo } from "../sockets/socket";
 import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
-import cloudinary from "../config/cloudinary.config.ts";
+import { s3 } from "../config/s3.config.ts";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 export const pdfWorker = new Worker(
   "pdf-generation",
@@ -130,43 +131,30 @@ export const pdfWorker = new Worker(
       await page.pdf({ path: localTempPath, format: "A4", printBackground: true });
       await browser.close();
 
-      try {
+      const fileBuffer = fs.readFileSync(localTempPath);
+      const s3Key = `assignments/${assignmentId}.pdf`;
 
-        console.log("Cloudinary Runtime Config:", cloudinary.config());
+        await s3.send(new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME!,
+        Key: s3Key,
+        Body: fileBuffer,
+        ContentType: "application/pdf",
+        }));
 
-        const uploadResult = await cloudinary.uploader.upload(localTempPath, {
-            folder: "veda-ai/assignments",
-            resource_type: "raw",
-            type: "upload",
-            api_key: process.env.CLOUDINARY_API_KEY,
-            api_secret: process.env.CLOUDINARY_API_SECRET,
+        const pdfUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
+
+        await Assignment.findByIdAndUpdate(assignmentId, {
+        pdfStatus: "COMPLETED",
+        pdfUrl,
         });
 
-        await Assignment.findByIdAndUpdate(assignmentId, { 
-          pdfStatus: "COMPLETED", 
-          pdfUrl: uploadResult.secure_url,
+        io.to(assignmentId).emit("pdf-status-update", {
+        assignmentId,
+        pdfStatus: "COMPLETED",
+        pdfUrl,
         });
 
-        io.to(assignmentId).emit("pdf-status-update", { 
-          assignmentId, 
-          pdfStatus: "COMPLETED", 
-          pdfUrl: uploadResult.secure_url,
-        });
-
-        console.log(`[Worker] PDF successfully created at ${pdfPath}`);
-      } catch (error: any) {
-        console.error(`[Worker] PDF generation failed:`, error.message);
-        
-        await Assignment.findByIdAndUpdate(assignmentId, { pdfStatus: "FAILED" });
-        io.to(assignmentId).emit("pdf-status-update", { assignmentId, pdfStatus: "FAILED" });
-        
-        throw error;
-      } finally {
-        // Clean up temp file if it exists
-        if (fs.existsSync(localTempPath)) {
-          fs.unlinkSync(localTempPath);
-        }
-      }
+        console.log(`[Worker] PDF uploaded to S3: ${pdfUrl}`);
     } catch (error: any) {
       console.error(`[Worker] PDF generation failed:`, error.message);
       
