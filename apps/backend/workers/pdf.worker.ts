@@ -125,20 +125,18 @@ export const pdfWorker = new Worker(
        });
       const page = await browser.newPage();
       await page.setContent(htmlContent);
-      await page.pdf({ 
-        path: pdfPath, 
-        format: "A4", 
-        margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" } 
-      });
 
       const localTempPath = path.join(__dirname, `../uploads/temp-${assignmentId}.pdf`);
       await page.pdf({ path: localTempPath, format: "A4", printBackground: true });
       await browser.close();
 
       try {
+        
+        console.log("Cloudinary Runtime Config:", cloudinary.config());
+
         const uploadResult = await cloudinary.uploader.upload(localTempPath, {
           folder: "veda-ai/assignments",
-          resource_type: "raw", 
+          resource_type: "auto", 
         });
 
         await Assignment.findByIdAndUpdate(assignmentId, { 
