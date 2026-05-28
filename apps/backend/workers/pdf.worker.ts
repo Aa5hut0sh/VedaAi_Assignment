@@ -131,12 +131,15 @@ export const pdfWorker = new Worker(
       await browser.close();
 
       try {
-        
+
         console.log("Cloudinary Runtime Config:", cloudinary.config());
 
         const uploadResult = await cloudinary.uploader.upload(localTempPath, {
-          folder: "veda-ai/assignments",
-          resource_type: "auto", 
+            folder: "veda-ai/assignments",
+            resource_type: "raw",
+            type: "upload",
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
         });
 
         await Assignment.findByIdAndUpdate(assignmentId, { 
