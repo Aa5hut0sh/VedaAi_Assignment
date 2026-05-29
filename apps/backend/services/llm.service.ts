@@ -172,6 +172,7 @@ EXAMPLE JSON OUTPUT:
     ]
     }
 `;
+  const safeContextMaterial = contextMaterial ? contextMaterial.slice(0, 18000) : "";
 
   try {
     const response = await groq.chat.completions.create({
@@ -181,10 +182,11 @@ EXAMPLE JSON OUTPUT:
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Here is the configuration for the test:\n${configString}${contextMaterial}`,
+          content: `Here is the configuration for the test:\n${configString}${safeContextMaterial}`,
         },
       ],
       temperature: 0.7,
+      max_tokens: 2500,
     });
 
     const aiOutput = response.choices[0]?.message?.content;
