@@ -172,7 +172,7 @@ EXAMPLE JSON OUTPUT:
     ]
     }
 `;
-  const safeContextMaterial = contextMaterial ? contextMaterial.slice(0, 18000) : "";
+  const safeContextMaterial = contextMaterial ? contextMaterial.slice(0, 14000) : "";
 
   try {
     const response = await groq.chat.completions.create({
