@@ -41,6 +41,11 @@ export default function LoginPage() {
     }
   };
 
+  const fillTestCredentials = () => {
+    setEmail("test@gmail.com");
+    setPassword("123456");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f4f4f5] px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-sm border border-gray-100">
@@ -48,12 +53,12 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <Image
-                    src="/images/logo.png"
-                    alt="VedaAI logo"
-                    width={48}
-                    height={48}
-                    priority
-                  />
+              src="/images/logo.png"
+              alt="VedaAI logo"
+              width={48}
+              height={48}
+              priority
+            />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
             Welcome to VedaAI
@@ -124,6 +129,17 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        <div 
+            onClick={fillTestCredentials}
+            className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors group"
+          >
+            <p className="text-sm font-bold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">
+              Use Test Credentials (Click to fill)
+            </p>
+            <p className="text-sm text-gray-500">Email: test@gmail.com</p>
+            <p className="text-sm text-gray-500">Password: 123456</p>
+          </div>
       </div>
     </div>
   );
